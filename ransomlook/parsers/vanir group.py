@@ -8,7 +8,7 @@ def main() -> List[Dict[str, str]] :
     for filename in os.listdir('source'):
         if filename.startswith(__name__.split('.')[-1]+'-'):
             html_doc='source/'+filename
-            file=open(html_doc,'r')
+            with open(html_doc,'r', encoding="utf-8") as file:
             if '.js' in filename:
                 content = file.read()
                 matches = re.search('projects:(.*)}}},P', content, re.IGNORECASE)
@@ -19,6 +19,5 @@ def main() -> List[Dict[str, str]] :
                     title = entry['projectName'].strip()
                     description = entry['projectDescription'].strip()
                     list_div.append({"title" : title, "description" : description})
-            file.close()
     print(list_div)
     return list_div

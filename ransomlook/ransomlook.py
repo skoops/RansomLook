@@ -18,7 +18,7 @@ from redis import Redis
 from pylacus import PyLacus
 from pylacus import CaptureSettings
 from lacuscore import LacusCore
-import libtorrent as lt # type: ignore
+import libtorrent as lt
 import asyncio
 import base64
 
@@ -92,10 +92,9 @@ def scraper(base: int) -> None:
                 remote_lacus_url = None
 
     if not remote_lacus_url:
-        lacus = LacusCore(redislacus,tor_proxy='socks5://127.0.0.1:9050') # type: ignore
-
+        lacus = LacusCore(redislacus,tor_proxy='socks5://127.0.0.1:9050')
     for key in red.keys():
-        group = json.loads(red.get(key)) # type: ignore
+        group = json.loads(red.get(key))
         group['name'] = key.decode()
         groups.append(group)
     for group in groups:
@@ -125,9 +124,9 @@ def scraper(base: int) -> None:
     if not remote_lacus_url:
         asyncio.run(run_captures())
     while running_capture:
-        for key in list(running_capture): # type: ignore
+        for key in list(running_capture):
             if lacus.get_capture_status(str(key)) == -1:
-                group = json.loads(red.get(running_capture[str(key)]['group'])) # type: ignore
+                group = json.loads(red.get(running_capture[str(key)]['group']))
                 for location in group['locations']:
                     if location['slug']==running_capture[str(key)]['slug']:
                         location.update({'available':False})
@@ -138,12 +137,12 @@ def scraper(base: int) -> None:
             if lacus.get_capture_status(str(key)) == 1 :
                 result = lacus.get_capture(str(key))
                 name = str(running_capture[str(key)]['group'])
-                group = json.loads(red.get(name)) # type: ignore
+                group = json.loads(red.get(name))
                 for location in group['locations']:
                     if location['slug']==running_capture[str(key)]['slug']:
                         host=location
                         continue
-                #if result['status']=='error': # type: ignore
+                #if result['status']=='error':
                 #    host.update({'available':False})
                 #    running_capture.pop(str(key))
                 #    red.set(name, json.dumps(group))
@@ -153,9 +152,9 @@ def scraper(base: int) -> None:
                     namefile = os.path.join(get_homedir(), 'source/screenshots', filename)
                     with open(namefile, 'wb') as tosave:
                         if remote_lacus_url:
-                            tosave.write((result['png'])) # type: ignore
+                            tosave.write((result['png']))
                         else:
-                            tosave.write(base64.b64decode(result['png'])) # type: ignore
+                            tosave.write(base64.b64decode(result['png']))
                     targetImage = Image.open(namefile)
                     metadata = PngInfo()
                     metadata.add_text("Source", "RansomLook.io")
@@ -170,27 +169,27 @@ def scraper(base: int) -> None:
                         file_path = os.path.join(folder, filename)
                         with open(file_path, 'wb') as tosave:
                             if remote_lacus_url:
-                                tosave.write((result['png'])) # type: ignore
+                                tosave.write((result['png']))
                             else:
-                                tosave.write(base64.b64decode(result['png'])) # type: ignore
+                                tosave.write(base64.b64decode(result['png']))
                 if 'html' in result:
                     filename = name + '-' + striptld(host['slug']) + '.html'
                     namefile = os.path.join(os.getcwd(), 'source', filename)
                     with open(namefile, 'w') as tosave:
-                        tosave.write(result['html']) # type: ignore
-                    host.update({'available':True, 'title':result['har']['log']['pages'][0]['title'], # type: ignore
-                             'lastscrape':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z',''), # type: ignore
-                             'updated':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z','')}) # type: ignore
-                elif 'har' in result and 'log' in result['har'] and 'entries' in result['har']['log'] : # type: ignore
+                        tosave.write(result['html'])
+                    host.update({'available':True, 'title':result['har']['log']['pages'][0]['title'],
+                             'lastscrape':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z',''),
+                             'updated':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z','')})
+                elif 'har' in result and 'log' in result['har'] and 'entries' in result['har']['log'] :
                     try:
-                        html = result['har']['log']['entries'][0]['response']['content']['text'] # type: ignore
+                        html = result['har']['log']['entries'][0]['response']['content']['text']
                         filename = name + '-' + striptld(host['slug']) + '.html'
                         namefile = os.path.join(os.getcwd(), 'source', filename)
                         with open(namefile, 'w') as tosave:
                             tosave.write(html)
-                        host.update({'available':True, 'title':result['har']['log']['pages'][0]['title'], # type: ignore
-                             'lastscrape':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z',''), # type: ignore
-                             'updated':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z','')}) # type: ignore
+                        host.update({'available':True, 'title':result['har']['log']['pages'][0]['title'],
+                             'lastscrape':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z',''),
+                             'updated':result['har']['log']['pages'][0]['startedDateTime'].replace('T',' ').replace('Z','')})
                     except:
                         host.update({'available':False})
                 else:
@@ -226,7 +225,7 @@ def appender(name: str, location: str, db: int, fs: bool, private: bool, chat: b
     to an existing group within groups.json
     '''
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=db)
-    group = json.loads(red.get(name.strip())) # type: ignore
+    group = json.loads(red.get(name.strip()))
     success = bool()
     for loc in group['locations']:
         if location == loc['slug']:
@@ -242,7 +241,7 @@ def screen() -> None:
         stdlog('No screen to do !')
         return
     redgroup = redis.Redis(unix_socket_path=get_socket_path('cache'), db=0)
-    captures = json.loads(red.get('toscan')) # type: ignore
+    captures = json.loads(red.get('toscan'))
     remote_lacus_url = None
     if get_config('generic', 'remote_lacus'):
         remote_lacus_config = get_config('generic', 'remote_lacus')
@@ -256,12 +255,11 @@ def screen() -> None:
                 remote_lacus_url = None
 
     if not remote_lacus_url:
-        lacus = LacusCore(redislacus,tor_proxy='socks5://127.0.0.1:9050') # type: ignore
-
+        lacus = LacusCore(redislacus,tor_proxy='socks5://127.0.0.1:9050')
     uuids = []
     slugs = []
     for capture in captures:
-        group = json.loads(redgroup.get(capture['group'].encode())) # type: ignore
+        group = json.loads(redgroup.get(capture['group'].encode()))
         for host in group['locations']:
           try:
             if capture['slug'].removeprefix(capture['group']+'-').split('.')[0] in striptld(host['slug']):
@@ -312,9 +310,9 @@ def screen() -> None:
                             namepng = os.path.join(path, filenamepng)
                             with open(namepng, 'wb') as tosave:
                                 if remote_lacus_url:
-                                    tosave.write((result['png'])) # type: ignore
+                                    tosave.write((result['png']))
                                 else:
-                                    tosave.write(base64.b64decode(result['png'])) # type: ignore
+                                    tosave.write(base64.b64decode(result['png']))
                             targetImage = Image.open(namepng)
                             metadata = PngInfo()
                             metadata.add_text("Source", "RansomLook.io")
@@ -326,15 +324,15 @@ def screen() -> None:
                                 os.mkdir(path)
                             name = os.path.join(path, filename)
                             with open(name, 'w') as tosave:
-                                tosave.write(result['html']) # type: ignore
+                                tosave.write(result['html'])
                             redpost = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
-                            updated = json.loads(redpost.get(capture['group'])) # type: ignore
+                            updated = json.loads(redpost.get(capture['group']))
                             for post in updated:
                                 if post['post_title'] == capture['title']:
                                     post['screen'] = str(os.path.join('screenshots', capture['group'], filenamepng))
                                     post.update(post)
                             redpost.set(capture['group'], json.dumps(updated))
-                            toscreen = json.loads(red.get('toscan')) # type: ignore
+                            toscreen = json.loads(red.get('toscan'))
                             for idx, item in enumerate(toscreen):
                                 if item['group'] == capture['group'] and item['title'] == capture['title']:
                                     toscreen.pop(idx)
@@ -387,14 +385,14 @@ def threadtorrent(queuethread, lock) -> None: # type: ignore[no-untyped-def]
         f.close()
 
         red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
-        updated = json.loads(red.get(torrent['group'])) # type: ignore
+        updated = json.loads(red.get(torrent['group']))
         for post in updated:
             if post['post_title'] == torrent['title']:
                 post['screen'] = str(os.path.join('screenshots', torrent['group'], filename))
                 post.update(post)
         red.set(torrent['group'], json.dumps(updated))
         red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=1)
-        totorrent = json.loads(red.get('totorrent')) # type: ignore
+        totorrent = json.loads(red.get('totorrent'))
         for idx, item in enumerate(totorrent):
             if item['group'] == torrent['group'] and item['title'] == torrent['title']:
                 totorrent.pop(idx)
@@ -411,12 +409,12 @@ def gettorrentinfo() -> None :
         return
     sess = lt.session()
     lock = Lock()
-    queuethread = queue.Queue() # type: ignore
+    queuethread = queue.Queue()
     for _ in range(get_config('generic','thread')):
         t = Thread(target=threadtorrent, args=(queuethread,lock), daemon=True)
         t.start()
 
-    torrents = json.loads(red.get('totorrent')) # type: ignore
+    torrents = json.loads(red.get('totorrent'))
     for torrent in torrents:
         data = [sess,torrent]
         queuethread.put(data)

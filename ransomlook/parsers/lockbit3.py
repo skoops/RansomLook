@@ -9,8 +9,8 @@ def main() -> List[Dict[str, str]] :
         try:
             if filename.startswith(__name__.split('.')[-1]+'-'):
                 html_doc='source/'+filename
-                file=open(html_doc,'r')
-                soup=BeautifulSoup(file,'html.parser')
+                with open(html_doc,'r', encoding="utf-8") as file:
+    soup=BeautifulSoup(file,'html.parser')
                 divs_name=soup.find_all('div', {"class": "post-block bad"})
                 for div in divs_name:
                     title = div.find('div',{"class": "post-title"}).text.strip()
@@ -34,12 +34,11 @@ def main() -> List[Dict[str, str]] :
                     title = div.find('div',{"class": "post-title"}).text.strip()
                     try:
                         description = div.find('div',{"class" : "post-block-text"}).text.strip()
-                    except:
+                    except Exception:
                         description = ''
                     link = div['href']
                     list_div.append({"title" : title, "description" : description, "link": link, "slug": filename})
-                file.close()
-        except:
+        except Exception:
             print("Failed during : " + filename)
             pass
     print(list_div)

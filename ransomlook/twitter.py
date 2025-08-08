@@ -11,8 +11,7 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 from .default.config import get_config, get_homedir, get_socket_path
 
-import tweepy # type: ignore
-
+import tweepy
 from .sharedutils import striptld
 from .sharedutils import siteschema
 from .sharedutils import stdlog, errlog
@@ -58,9 +57,9 @@ def parser() -> None :
            html_doc='source/twitter/'+ key.decode() + '.html'
            file=open(html_doc,'r')
            soup = BeautifulSoup(file,'html.parser')
-           profile = json.loads(red.get(key)) # type: ignore
+           profile = json.loads(red.get(key))
            name =  soup.find('div',{'data-testid':'UserName'}) 
-           profile['displayname'] = name.div.div.div.text # type: ignore
+           profile['displayname'] = name.div.div.div.text
            description = soup.find('div', {'data-testid':'UserDescription'})
            if description != None:
                profile['meta'] = description.text
@@ -70,14 +69,14 @@ def parser() -> None :
            website = soup.find('a',{'data-testid':'UserUrl'})
            if website != None:
                profile['link'] = website.text
-           join_date =soup.find('span',{'data-testid':'UserJoinDate'}).text # type: ignore
+           join_date =soup.find('span',{'data-testid':'UserJoinDate'}).text
            profile['joindate'] = join_date
-           profile['following'] = soup.find('span', text = "Following").parent.span.text # type: ignore
-           profile['followers'] = soup.find('span', text = "Followers").parent.span.text # type: ignore
+           profile['following'] = soup.find('span', text = "Following").parent.span.text
+           profile['followers'] = soup.find('span', text = "Followers").parent.span.text
            red.set(key,json.dumps(profile))
            tweets = soup.find_all('article',{'data-testid':'tweet'})
            if key in redmessage.keys():
-               posts = json.loads(redmessage.get(key)) # type: ignore
+               posts = json.loads(redmessage.get(key))
            else:
                posts={}
            for tweet  in tweets:
@@ -113,7 +112,7 @@ def parser() -> None :
                   errlog(e)
            redmessage.set(key,json.dumps(posts))
 
-def threadscape(queuethread, lock): # type: ignore
+def threadscape(queuethread, lock):
     '''
     Thread used to scrape our website
     '''
@@ -159,7 +158,7 @@ def scraper() -> None:
     '''main scraping function'''
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=8)
     lock = Lock()
-    queuethread = queue.Queue() # type: ignore
+    queuethread = queue.Queue()
     for _ in range(get_config('generic','thread')):
         thread1 = Thread(target=threadscape, args=(queuethread,lock), daemon=True)
         thread1.start()

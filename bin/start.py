@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-from subprocess import Popen, run
+import subprocess
+import redis
+from ransomlook.default.config import get_socket_path
 
-from ransomlook.default import get_config, get_homedir
-
-
-def main() -> None:
-    # Just fail if the env isn't set.
-    get_homedir()
-    print('Start backend (redis)...')
-    p = run(['run_backend', '--start'])
-    p.check_returncode()
-    print('done.')
-    print('Start website...')
-    Popen(['start_website'])
-    print('done.')
+def main() -> None :
+    red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
+    redleak = redis.Redis(unix_socket_path=get_socket_path('cache'), db=4)
+    redleak.set('leaks', '[]')
+    redleak.set('groups', '[]')
+    red.set('groups', '[]')
+    subprocess.run(['poetry', 'run', 'scrape'], check=True)
+    subprocess.run(['poetry', 'run', 'parse'], check=True)
 
 if __name__ == '__main__':
     main()

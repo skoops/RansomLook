@@ -13,8 +13,7 @@ from datetime import datetime
 import time
 from typing import Dict, List, Any
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from playwright_stealth import Stealth # type: ignore
-
+from playwright_stealth import Stealth
 from .default.config import get_config, get_homedir, get_socket_path
 
 import uuid
@@ -32,8 +31,7 @@ from .sharedutils import createfile
 import requests, shutil
 
 from bs4 import BeautifulSoup
-from googletrans import Translator # type: ignore
-
+from googletrans import Translator
 import re
 
 def alertingnotify(config: Dict[str, Any], group: bytes, description: str, keyword: List[str], timestamp: str) -> None :
@@ -81,7 +79,7 @@ A new message in telegram is matching your keywords:
         print(e)
     except Exception as e: print(e)
 
-def threadscape(queuethread, lock): # type: ignore
+def threadscape(queuethread, lock):
     '''
     Thread used to scrape our website
     '''
@@ -129,10 +127,10 @@ def scraper() -> None:
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=5)
     groups=[]
     for key in red.keys():
-        group = json.loads(red.get(key)) # type: ignore
+        group = json.loads(red.get(key))
         groups.append(group)
     lock = Lock()
-    queuethread = queue.Queue() # type: ignore
+    queuethread = queue.Queue()
     for _ in range(get_config('generic','thread')):
         thread1 = Thread(target=threadscape, args=(queuethread,lock), daemon=True)
         thread1.start()
@@ -162,13 +160,13 @@ def parser() -> None:
            file=open(html_doc,'r')
            soup = BeautifulSoup(file,'html.parser')
            titletag = soup.find('title')
-           title = titletag.string # type: ignore
-           data = json.loads(red.get(key)) # type: ignore
+           title = titletag.string
+           data = json.loads(red.get(key))
            data['meta']=title
            red.set(key, json.dumps(data))
            tgpost =  soup.find_all('div', {'class' : 'tgme_widget_message'})
            if key in redmessage.keys():
-               posts = json.loads(redmessage.get(key)) # type: ignore
+               posts = json.loads(redmessage.get(key))
            else:
                posts={}
            for content in tgpost:

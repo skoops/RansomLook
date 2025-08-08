@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-from subprocess import Popen, run
+import subprocess
+import redis
+from ransomlook.default.config import get_socket_path
 
-from redis import Redis
-from redis.exceptions import ConnectionError
-
-from ransomlook.default import get_homedir, get_socket_path
-
-
-def main() -> None:
-    get_homedir()
-    p = Popen(['shutdown'])
-    p.wait()
+def main() -> None :
     try:
-        r = Redis(unix_socket_path=get_socket_path('cache'), db=1)
-        r.delete('shutdown')
-        print('Shutting down databases...')
-        p_backend = run(['run_backend', '--stop'])
-        p_backend.check_returncode()
-        print('done.')
-    except ConnectionError:
-        # Already down, skip the stacktrace
-        pass
-
+        with open('/tmp/ransomlook.pid', 'r', encoding='utf-8') as f:
+            pid = f.read().strip()
+        subprocess.run(['kill', pid], check=True)
+        print(f"Stopped process {pid}")
+    except FileNotFoundError:
+        print("No PID file found")
+    except subprocess.CalledProcessError:
+        print("Failed to stop process")
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == '__main__':
     main()

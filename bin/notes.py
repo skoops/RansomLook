@@ -1,37 +1,31 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json
 import redis
-import tempfile
-import os
-from git import Repo
-
-from ransomlook.default.config import get_config, get_socket_path
+from typing import Dict, Any, List
+from ransomlook.default.config import get_socket_path
 
 def main() -> None :
-    gitrepo = 'https://github.com/threatlabz/ransomware_notes'
-    red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=11)
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        Repo.clone_from(gitrepo, tmpdirname)
-        rootdir = tmpdirname
-        for folder in os.listdir(rootdir):
-            if folder.startswith('.'):
-                continue
-            data=[]
-            d = os.path.join(rootdir, folder)
-            if os.path.isdir(d):
-                key = os.path.dirname(d)
-                for file in os.listdir(d):
-                    f = os.path.join(d, file)
-                    if os.path.isfile(f):
-                        myfile = open(f,mode='r')
-                        try : 
-                            content = myfile.read()
-                            data.append({'name':file,'content':content})
-                        except :
-                            pass
-                        myfile.close()
-            if data :
-                red.set(folder.lower(), json.dumps(data))
+    red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=5)
+    
+    try:
+        with open('ransomnotes.json', 'r', encoding='utf-8') as f:
+            notes_data = json.load(f)
+        
+        # Store ransom notes data
+        for note in notes_data:
+            note_id = note.get('id', 'unknown')
+            red.set(f'note_{note_id}', json.dumps(note))
+        
+        print(f"Loaded {len(notes_data)} ransom notes")
+        
+    except FileNotFoundError:
+        print("ransomnotes.json not found")
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON in ransomnotes.json: {e}")
+    except Exception as e:
+        print(f"Error processing ransom notes: {e}")
 
 if __name__ == '__main__':
     main()

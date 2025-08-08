@@ -3,7 +3,7 @@
 '''
 RocketChat module
 '''
-from rocketchat_API.rocketchat import RocketChat # type: ignore
+from rocketchat_API.rocketchat import RocketChat
 from .sharedutils import errlog
 from typing import Dict, Any
 

@@ -11,8 +11,8 @@ import sys
 import redis
 
 import matplotlib.pyplot as plt
-import plotly.express as px # type: ignore
-import plotly.io as pio     # type: ignore
+import plotly.express as px
+import plotly.io as pio
 import pandas as pd
 
 from typing import Dict, List, Tuple, Any, Optional
@@ -55,7 +55,7 @@ def statsgroup(group: bytes) -> None :
     counts = (Any)
 
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
-    post_data = json.loads(red.get(group)) # type: ignore
+    post_data = json.loads(red.get(group))
     # Count the number of victims per day
     for post in post_data:
         date = post['discovered'].split(' ')[0]
@@ -65,7 +65,7 @@ def statsgroup(group: bytes) -> None :
     sorted_counts = sorted(victim_counts.items())
 
     # Extract the dates and counts for plotting
-    dates, counts = zip(*sorted_counts) # type: ignore
+    dates, counts = zip(*sorted_counts)
     # Plot the graph
     plt.clf()
     # Create a new figure and axes for each group with a larger figure size
@@ -78,7 +78,7 @@ def statsgroup(group: bytes) -> None :
     color = '#505d6b'
     if get_config("generic","darkmode"):
         color ='#ddd'
-    ax.bar(dates, counts, color = '#6ad37a') # type: ignore
+    ax.bar(dates, counts, color = '#6ad37a')
     ax.set_xlabel('New daily discovery when parsing', color = color)
     ax.set_ylabel('Number of Victims', color = color)
     ax.set_title('Number of Victims for Group: ' + group.decode().title(), color = color)
@@ -108,7 +108,7 @@ def run_data_viz(days_filter: int) -> None:
     group_names = []
     timestamps = []
     for key in red.keys():
-        posts = json.loads(red.get(key)) # type: ignore
+        posts = json.loads(red.get(key))
         for post in posts:
             postdate = datetime.fromisoformat(post['discovered'])
             if (now - postdate).days < days_filter:
@@ -167,7 +167,7 @@ def postcount() -> int :
     post_count = 0
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
     for group in red.keys():
-        grouppost = json.loads(red.get(group)) # type: ignore
+        grouppost = json.loads(red.get(group))
         post_count+=len(grouppost)
     return post_count
 
@@ -181,7 +181,7 @@ def hostcount(db: int) -> int :
     groups = red.keys()
     host_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             host_count += 1
     return host_count
@@ -191,7 +191,7 @@ def hostcountdls(db: int) -> int :
     groups = red.keys()
     host_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             if (not 'chat' in host or host['chat'] is False) and (not 'fs' in host or host['fs'] is False) and (not 'admin' in host or host['admin'] is False):
                 host_count += 1
@@ -202,7 +202,7 @@ def hostcountfs(db: int) -> int :
     groups = red.keys()
     host_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             if 'fs' in host and host['fs'] is True:
                 host_count += 1
@@ -213,7 +213,7 @@ def hostcountchat(db: int) -> int :
     groups = red.keys()
     host_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             if 'chat' in host and host['chat'] is True:
                 host_count += 1
@@ -224,7 +224,7 @@ def hostcountadmin(db: int) -> int :
     groups = red.keys()
     host_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             if 'admin' in host and host['admin'] is True:
                 host_count += 1
@@ -236,7 +236,7 @@ def postssince(days: int) -> int :
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
     groups = red.keys()
     for entry in groups:
-        posts = json.loads(red.get(entry)) # type: ignore
+        posts = json.loads(red.get(entry))
         for post in posts:
             try:
                 datetime_object = datetime.strptime(post['discovered'], '%Y-%m-%d %H:%M:%S.%f')
@@ -253,7 +253,7 @@ def poststhisyear() -> int :
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
     groups = red.keys()
     for entry in groups:
-        posts = json.loads(red.get(entry)) # type: ignore
+        posts = json.loads(red.get(entry))
         for post in posts:
             try:
                 datetime_object = datetime.strptime(post['discovered'], '%Y-%m-%d %H:%M:%S.%f')
@@ -269,7 +269,7 @@ def postslast24h() -> int :
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
     groups = red.keys()
     for entry in groups:
-        posts = json.loads(red.get(entry)) # type: ignore
+        posts = json.loads(red.get(entry))
         for post in posts:
             try :
                 datetime_object = datetime.strptime(post['discovered'], '%Y-%m-%d %H:%M:%S.%f')
@@ -289,7 +289,7 @@ def onlinecount(db: int) -> int :
     groups = red.keys()
     online_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         for host in group['locations']:
             if host['available'] is True:
                 online_count += 1
@@ -311,7 +311,7 @@ def mounthlypostcount() -> int :
     date_today = datetime.now()
     month_first_day = date_today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     for entry in groups:
-        posts = json.loads(red.get(entry)) # type: ignore
+        posts = json.loads(red.get(entry))
         for post in posts:
             try:
                 datetime_object = datetime.strptime(post['discovered'], '%Y-%m-%d %H:%M:%S.%f')
@@ -327,7 +327,7 @@ def countcaptchahosts() -> int :
     groups = red.keys()
     captcha_count = 0
     for entry in groups:
-        group = json.loads(red.get(entry)) # type: ignore
+        group = json.loads(red.get(entry))
         if group['captcha'] is True:
             captcha_count += 1
     return captcha_count
@@ -414,6 +414,6 @@ def format_bytes(size: int) -> str :
     n = 0
     power_labels = {0 : 'B', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
     while size > power:
-        size /= power # type: ignore
+        size /= power
         n += 1
     return f"{size:.2f} {power_labels[n]}"

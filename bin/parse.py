@@ -1,45 +1,57 @@
 #!/usr/bin/env python3
-#from ransomlook import ransomlook
-import importlib
-from os.path import dirname, basename, isfile, join
-import glob
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import importlib.util
 import json
-
-from datetime import datetime
-from datetime import timedelta
-
-import collections
-
 import redis
+from typing import List, Dict, Any
 
-from ransomlook.default.config import get_config, get_socket_path
+from ransomlook.default.config import get_socket_path
 
-from ransomlook.posts import appender
-from ransomlook.sharedutils import dbglog, stdlog, errlog, statsgroup, run_data_viz
-
-from typing import Dict, Optional, Union, Any, List
-
-def main() -> None:
-    modules = glob.glob(join(dirname('ransomlook/parsers/'), "*.py"))
-    __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and not f.endswith('__init__.py')]
-    for parser in __all__:
-        module = importlib.import_module(f'ransomlook.parsers.{parser}')
-        print('\nParser : '+parser)
-
-        try:
-            for entry in module.main():
-                appender(entry, parser)
-        except Exception as e:
-            print("Error with : " + parser)
-            print(e)
-            pass
+def main() -> None :
     red = redis.Redis(unix_socket_path=get_socket_path('cache'), db=2)
-    for key in red.keys():
-        statsgroup(key)
-    run_data_viz(7)
-    run_data_viz(14)
-    run_data_viz(30)
-    run_data_viz(90)
+    redleak = redis.Redis(unix_socket_path=get_socket_path('cache'), db=4)
+    groups = red.keys()
+    leaks = redleak.keys()
+    for group in groups:
+        try:
+            group_data = json.loads(red.get(group)) # type: ignore
+            if group_data:
+                group_name = group.decode()
+                parser_name = group_name.replace(' ', '').replace('-', '').replace('(', '').replace(')', '').replace('.', '').lower()
+                parser_path = f'ransomlook.parsers.{parser_name}'
+                try:
+                    parser_module = importlib.import_module(parser_path)
+                    if hasattr(parser_module, 'main'):
+                        parser_result = parser_module.main()
+                        if parser_result:
+                            red.set(group, json.dumps(parser_result))
+                            print(f"Updated {group_name}")
+                except ImportError:
+                    print(f"No parser found for {group_name}")
+        except Exception as e:
+            print(f"Error processing {group}: {e}")
+
+    for leak in leaks:
+        try:
+            leak_data = json.loads(redleak.get(leak)) # type: ignore
+            if leak_data:
+                leak_name = leak.decode()
+                parser_name = leak_name.replace(' ', '').replace('-', '').replace('(', '').replace(')', '').replace('.', '').lower()
+                parser_path = f'ransomlook.parsers.{parser_name}'
+                try:
+                    parser_module = importlib.import_module(parser_path)
+                    if hasattr(parser_module, 'main'):
+                        parser_result = parser_module.main()
+                        if parser_result:
+                            redleak.set(leak, json.dumps(parser_result))
+                            print(f"Updated {leak_name}")
+                except ImportError:
+                    print(f"No parser found for {leak_name}")
+        except Exception as e:
+            print(f"Error processing {leak}: {e}")
 
 if __name__ == '__main__':
     main()

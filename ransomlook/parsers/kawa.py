@@ -9,7 +9,7 @@ def main() -> List[Dict[str, str]] :
         try:
             if filename.startswith(__name__.split('.')[-1]+'-'):
                 html_doc='source/'+filename
-                file=open(html_doc,'r')
+                with open(html_doc,'r', encoding="utf-8") as file:
                 js_content = file.read()
                 if 'leaks-data' in filename:
                     match = re.search(r"let\s+leaks\s*=\s*(\[[\s\S]*?\])\s*,", js_content)
@@ -22,8 +22,7 @@ def main() -> List[Dict[str, str]] :
                             description = entry['description'].strip()
                             link = '/'+entry['id'].strip()
                             list_div.append({'title':title, 'description': description, 'link': link, 'slug': filename})
-                file.close()
-        except:
+        except Exception:
             print("Failed during : " + filename)
             pass
     print(list_div)
